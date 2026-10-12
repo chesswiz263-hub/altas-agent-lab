@@ -155,7 +155,3 @@ The Docker image deliberately installs only base dependencies; the port is mappe
 - `tests/test_v04.py` — restart, cancellation, access, memory, and calibration integration checks
 
 See [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Deployment](docs/DEPLOYMENT.md), [Roadmap](docs/ROADMAP.md) and [Changelog](CHANGELOG.md).
-
-### Publish when you're ready
-
-The repository is prepared for your own GitHub account. See [GitHub publishing](docs/GITHUB_PUBLISHING.md) for local CLI commands and a pre-push secrets checklist. Connecting your account does **not** occur automatically, and this ZIP is not evidence that the code has been pushed to GitHub.
