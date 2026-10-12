@@ -1,9 +1,22 @@
 # ATLAS — Agent Intelligence Lab
 
-**v0.6.0 · Public interactive demo + v0.5 private browser workspace**  
+**v1.0.0 · Evidence relevance, research dossiers, arithmetic checks + browser/private workspaces**  
 Python 3.11+ · FastAPI · SQLite/FTS5 · JavaScript dashboard · optional neural embeddings · MIT
 
 > Research, execute, inspect, and evaluate tool-using agents with observable decisions. ATLAS is deliberately an **engineering prototype**: its offline demo is deterministic, its citation checks are not truth oracles, and it is **not a production multi-tenant SaaS**.
+
+## Version 1.0 — evidence-first research foundation
+
+This release combines the **v0.7–v1.0 development track** as a single repository update. It does **not** claim to solve the long-term autonomous dark-matter research objective yet.
+
+- **v0.7 — Retrieval integrity:** explicit relevance gate, two-or-more-anchor matching, abstention, coverage diagnostics, and permanent regression cases for Aharonov–Bohm and wavefunction/vector-potential false positives.
+- **v0.8 — Provenance:** exact, source-linked excerpts in the public demo; SHA-256 checksums for indexed local passages in the Python research dossier (not independent authenticity checks).
+- **v0.9 — Research framework:** exportable offline evidence dossier, hypothesis labels with explicit NOT_EVALUATED states, and scoped numerical arithmetic checks. No simulated scientific conclusions.
+- **v1.0 — Integrated API and tests:** `POST /api/research/dossier`, bounded request validation, CI regression suite for reliable abstention and checked arithmetic, and browser JSON dossier export.
+
+**Public demo:** https://chesswiz263-hub.github.io/atlas-agent-lab/ (after you publish this update to GitHub Pages). The demonstration remains offline and restricted to three AI engineering documents. The full backend research endpoint runs only in the private Python application.
+
+**Not implemented:** scientific paper discovery, independent literature verification, live online citation checks, theory comparison, dimensional analysis, symbolic mathematics, or autonomous physics synthesis. Claims must not be described as scientifically verified based on source hashes alone. See [Research integrity and roadmap](docs/RESEARCH_INTEGRITY.md).
 
 ## Capabilities
 
@@ -19,14 +32,15 @@ Python 3.11+ · FastAPI · SQLite/FTS5 · JavaScript dashboard · optional neura
 | **v0.4 calibration** | Ten hand-labeled isolated citation-surface test cases with per-class precision/recall and confusion matrix |
 | **v0.5 browser workspace** | GitHub Codespaces private-port launcher, authenticated hosted dashboard (signed session cookies, CSRF, login throttling), optional paid Render persistent deployment |
 | **v0.6 public demo** | Entirely static GitHub Pages interface, real local BM25 search against 3 published example documents, exact source-excerpt checks, 4-stage deterministic trace, 6-question retrieval smoke benchmark, no accounts or API tokens |
+| **v1.0 evidence-first research** | Lexical relevance gate in public demo; exportable evidence dossier; private Python local-index research API and bounded exact-rational arithmetic checks |
 | Observability | Evidence inspector with explicit citation validation and numeric mismatches, SSE for legacy runs, dashboard traces, local run history |
 | Packaging | Docker/Compose, private GitHub Codespaces workspace, optional paid Render Blueprint with persistent disk, GitHub Actions test matrix and integration tests |
 
-## Try the public demo in your browser (v0.6)
+## Try the public demo in your browser (v1.0)
 
-The **`docs/index.html`** public demo runs on **GitHub Pages** without a backend or login. The visitor can type a question, see ranked results from 12 passages (three public documents), inspect extractive quotations with source links, follow a four-step deterministic trace, and run a six-question retrieval smoke test. The site makes **zero API calls** and does **not** execute OpenAI, Anthropic, Gemini, or independent AI agents. It does not connect to the private SQLite database or stored documents. It is not a live model demo or a generic question-answering assistant.
+The **`docs/index.html`** public demo runs on **GitHub Pages** without a backend or login. The visitor can type a question, see ranked results from 12 passages (three public documents), inspect extractive quotations with source links, follow a four-step deterministic trace, and run a six-question retrieval smoke test. The site makes **zero API calls** and does **not** execute OpenAI, Anthropic, Gemini, or independent AI agents. It does not connect to the private SQLite database or stored documents. It is not a live model demo or a generic question-answering assistant. A v1.0 lexical relevance gate now reduces spurious off-topic retrieval, and a JSON research dossier can be exported after running a question.
 
-**Publish:** after committing this combined v0.5 + v0.6 repository, go to **GitHub repository → Settings → Pages → Source: Deploy from a branch → Branch: main → Folder: /docs → Save**. Wait for GitHub Pages deployment to complete. For the current GitHub repository spelling, the expected URL after deployment is `https://chesswiz263-hub.github.io/altas-agent-lab/` (it is **not live until Pages is enabled**). GitHub Pages configuration is separate from ordinary CI; a green Python CI check does not by itself mean the site is live. See **[docs/PUBLIC_DEMO_DEPLOYMENT.md](docs/PUBLIC_DEMO_DEPLOYMENT.md)**.
+**Publish:** after committing this v1.0 repository, go to **GitHub repository → Settings → Pages → Source: Deploy from a branch → Branch: main → Folder: /docs → Save**. Wait for GitHub Pages deployment to complete. For the current GitHub repository spelling, the expected URL after deployment is `https://chesswiz263-hub.github.io/atlas-agent-lab/` (it is **not live until Pages is enabled**). GitHub Pages configuration is separate from ordinary CI; a green Python CI check does not by itself mean the site is live. See **[docs/PUBLIC_DEMO_DEPLOYMENT.md](docs/PUBLIC_DEMO_DEPLOYMENT.md)**.
 
 The browser demo is static, whereas **v0.5 remains the private development workspace** with real Python agents, optional model providers, jobs and local state. Do not embed any server-side credentials in public demo files or enable the protected backend as a public Pages API.
 

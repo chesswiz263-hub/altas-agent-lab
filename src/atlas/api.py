@@ -20,6 +20,7 @@ from atlas.embeddings import EmbeddingUnavailable
 from atlas.evaluation import evaluate
 from atlas.nli import judge
 from atlas.router import plan
+from atlas.research import create_dossier
 from atlas.schemas import (
     ComparisonRequest,
     JobRequest,
@@ -30,6 +31,7 @@ from atlas.schemas import (
     RunRequest,
     SemanticIndexRequest,
     VerifyRequest,
+    ResearchDossierRequest,
 )
 from atlas.store import Store
 from atlas.team import Team
@@ -53,7 +55,7 @@ def create_app(store: Store | None = None) -> FastAPI:
         finally:
             await worker.stop()
 
-    app = FastAPI(title="ATLAS Agent Lab", version="0.6.0",
+    app = FastAPI(title="ATLAS Agent Lab", version="1.0.0",
                   description="Auditable agents, local durable job queue, opt-in memory, and calibrated evals",
                   lifespan=lifespan)
     app.state.store = db
@@ -169,7 +171,7 @@ def create_app(store: Store | None = None) -> FastAPI:
 
     @app.get("/api/health")
     def health():
-        return {"ok": True, "service": "atlas", "version": "0.6.0"}
+        return {"ok": True, "service": "atlas", "version": "1.0.0"}
 
     @app.get("/api/status")
     def status():
@@ -213,6 +215,14 @@ def create_app(store: Store | None = None) -> FastAPI:
             return {"mode": mode, "results": methods[mode](q)}
         except EmbeddingUnavailable as exc:
             raise HTTPException(409, str(exc)) from exc
+
+    @app.post("/api/research/dossier")
+    def research_dossier(request: ResearchDossierRequest):
+        if any(len(x) > 120 or not x.strip() for x in request.hypotheses):
+            raise HTTPException(422, "Hypothesis labels must be 1 to 120 characters")
+        if any(len(x) > 160 for x in request.equations):
+            raise HTTPException(422, "Equations must be at most 160 characters")
+        return create_dossier(request.question, app.state.store, request.hypotheses, request.equations)
 
     @app.get("/api/embeddings/status")
     def embedding_status():

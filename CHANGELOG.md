@@ -1,3 +1,13 @@
+# Changelog
+
+## v1.0.0 — Evidence-first research foundations
+- v0.7 track: browser relevance gate with query coverage and abstention, physics false-positive regression tests.
+- v0.8 track: evidence provenance metadata and exact quote checks; local-index SHA-256 passage hashes in private API.
+- v0.9 track: offline research dossier exports, explicit hypothesis NOT_EVALUATED status and scoped rational arithmetic checker.
+- v1.0 track: private `/api/research/dossier` endpoint and combined test coverage.
+- Preserves v0.5 private Codespaces/hosted workspace and v0.6 static GitHub Pages demo.
+- No external scientific citation verification or autonomous scientific synthesis.
+
 ## [0.6.0] - 2026-10-11
 
 - Added free, fully static GitHub Pages demo at `docs/index.html`: public research console, local BM25 retrieval, 4-step trace, exact quotation auditing, sample corpus inspector, six-case evaluation.

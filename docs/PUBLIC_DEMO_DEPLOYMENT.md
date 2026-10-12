@@ -1,6 +1,6 @@
 # ATLAS v0.6 — Publish the public demo on GitHub Pages
 
-This is the exact sequence for the existing `chesswiz263-hub/altas-agent-lab` repository (adjust if renamed). **The v0.6 archive is already a single complete repository containing every v0.5 file plus the public demo and updated tests. Do not upload a ZIP as the only repository file.**
+This is the exact sequence for the existing `chesswiz263-hub/atlas-agent-lab` repository (adjust if renamed). **The v1.0 archive is already a single complete repository containing every v0.5 file plus the public demo and updated tests. Do not upload a ZIP as the only repository file.**
 
 ## One combined update
 
@@ -13,7 +13,7 @@ This is the exact sequence for the existing `chesswiz263-hub/altas-agent-lab` re
 ### If you use GitHub Desktop (reliable update workflow)
 
 1. Install GitHub Desktop and sign in to GitHub.
-2. Use **File → Clone repository**, select `chesswiz263-hub/altas-agent-lab`, and clone to a folder you choose.
+2. Use **File → Clone repository**, select `chesswiz263-hub/atlas-agent-lab`, and clone to a folder you choose.
 3. In File Explorer, open the **extracted** `atlas-agent-lab` directory, select all its contents (including hidden dot-directories), and copy them into the **cloned repo folder**. Choose **Replace files in destination** when asked.
 4. In GitHub Desktop, review the **Changes** tab. You should see new public-demo files and updates to existing v0.4 files. Commit to `main`, then **Push origin**.
 5. Confirm the CI workflow is green on GitHub. This preserves your existing `v0.4.0` tag and history; it does not automatically create a `v0.6.0` release.
@@ -25,7 +25,7 @@ This is the exact sequence for the existing `chesswiz263-hub/altas-agent-lab` re
 3. Under **Build and deployment**, choose **Source → Deploy from a branch**.
 4. Set **Branch → main** and **Folder → /docs**, and click **Save**.
 5. In **Actions**, wait for the GitHub Pages build/deployment to finish. Under Settings → Pages, GitHub will show the published URL.
-6. For a project repository under `chesswiz263-hub`, the URL should be **`https://chesswiz263-hub.github.io/altas-agent-lab/`** if the repository name remains `altas-agent-lab`. If you rename to `atlas-agent-lab`, the URL path also changes.
+6. For a project repository under `chesswiz263-hub`, the URL should be **`https://chesswiz263-hub.github.io/atlas-agent-lab/`** if the repository name remains `atlas-agent-lab`. If you rename to `atlas-agent-lab`, the URL path also changes.
 7. Open the published URL in a private/incognito browser window and try: **Agent safeguards**, **MCP integration**, **Citation validity**, Knowledge base, and Evaluation lab.
 8. In the repo sidebar **About**, add the actual deployed address to the **Website** field, after verifying it works.
 
@@ -49,7 +49,7 @@ This is the exact sequence for the existing `chesswiz263-hub/altas-agent-lab` re
 - Public documents are **copied from `examples/knowledge`** during release preparation and validated byte-for-byte by the Node tests. Changing those source Markdown files later should be accompanied by regenerating `docs/demo/corpus.js`.
 - Citation audit checks **exact substrings only**. Even if a quote exists, external factual validity is **not established**.
 - There is no artificial rate limit because calculations happen entirely on each visitor's own browser and do not consume server or paid-model resources.
-- The embedded links to GitHub source currently point to `chesswiz263-hub/altas-agent-lab`. Update the URL in `docs/index.html` and `docs/demo/app.js` if renaming your repository, and update this guide.
+- The embedded links to GitHub source currently point to `chesswiz263-hub/atlas-agent-lab`. Update the URL in `docs/index.html` and `docs/demo/app.js` if renaming your repository, and update this guide.
 
 ## Troubleshooting
 

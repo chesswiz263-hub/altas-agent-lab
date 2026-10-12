@@ -50,7 +50,7 @@ def test_fails_closed_without_credentials(monkeypatch, tmp_path):
 
 def test_hosted_blocks_dashboard_api_and_docs_without_login(hosted):
     assert hosted.get('/api/health').status_code == 200
-    assert hosted.get('/api/health').json()['version'] == '0.6.0'
+    assert hosted.get('/api/health').json()['version'] == '1.0.0'
     for path in ('/', '/static/app.js', '/docs', '/openapi.json', '/api/status', '/api/memories'):
         resp = hosted.get(path, follow_redirects=False)
         assert resp.status_code in (303, 401), (path, resp.status_code)

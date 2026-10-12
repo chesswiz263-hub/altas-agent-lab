@@ -67,6 +67,29 @@
       }).filter(c => c.score > 0).sort((a,b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
     }
 
+    function relevanceGate(question, results) {
+      const terms = [...new Set(tokenize(question))];
+      const available = terms.filter(t => frequency.has(t));
+      const missing = terms.filter(t => !frequency.has(t));
+      const candidate = results[0] || null;
+      const coverage = terms.length ? available.length / terms.length : 0;
+      const passageCoverage = candidate ? candidate.coverage : 0;
+      // Require multiple independent lexical anchors for multi-term queries.
+      // A lone shared word (such as "vector" or "effect") is never enough.
+      const minimumHits = terms.length <= 1 ? 1 : 2;
+      const minCoverage = terms.length <= 2 ? 0.5 : 0.46;
+      let reason = null;
+      if (!candidate) reason = 'No matching source passages';
+      else if (available.length < minimumHits || candidate.hits < minimumHits)
+        reason = 'Insufficient distinct query terms supported by a single source passage';
+      else if (coverage < minCoverage || passageCoverage < Math.min(minCoverage, 0.5))
+        reason = 'Insufficient important-term coverage for reliable retrieval';
+      return { accepted: reason === null, reason: reason || 'Minimum lexical relevance checks passed',
+        matchedTerms: available, unmatchedTerms: missing, corpusCoverage: coverage,
+        topPassageCoverage: passageCoverage, topScore: candidate?.score || 0,
+        disclaimer: 'Lexical diagnostics only; passing does not prove semantic relevance, entailment or factual truth.' };
+    }
+
     function selectEvidence(question, results, maxItems = 3) {
       const q = new Set(tokenize(question));
       const sentences = [];
@@ -77,7 +100,7 @@
           const words = new Set(tokenize(sentence));
           const overlap = [...q].filter(t => words.has(t)).length;
           // A sentence must share substantive terms with the question.
-          if (overlap) sentences.push({ sentence, overlap, source: hit });
+          if (overlap >= Math.min(2, q.size)) sentences.push({ sentence, overlap, source: hit });
         });
       });
       sentences.sort((a,b) => b.overlap - a.overlap || b.source.score - a.source.score || a.sentence.localeCompare(b.sentence));
@@ -115,10 +138,11 @@
       const routeResult = route(clean);
       const results = search(clean, 4);
       // No snippets at all means decline rather than fabricate an answer.
-      const evidence = selectEvidence(clean, results);
+      const relevance = relevanceGate(clean, results);
+      const evidence = relevance.accepted ? selectEvidence(clean, results) : [];
       const validation = audit(evidence);
       const found = evidence.length > 0 && validation.valid;
-      const status = !found ? 'No supporting passage in the sample documents' : 'Source excerpts found';
+      const status = !found ? 'No sufficiently relevant passage in the sample documents' : 'Source excerpts found';
       const relevantWords = new Set(results.flatMap(r => tokenize(r.text)));
       const queryWords = new Set(tokenize(clean));
       const overlap = [...queryWords].filter(w => relevantWords.has(w)).length;
@@ -126,14 +150,38 @@
       const trace = [
         { label: 'Route question', detail: `${routeResult.label} · ${routeResult.reason}` },
         { label: 'Search documents', detail: `Ran local BM25 over ${chunks.length} public passages · ${results.length} matching results` },
-        { label: 'Check evidence', detail: `Verified ${validation.checked} exact source excerpts · ${validation.valid ? 'all source matches valid' : 'source mismatch'}` },
+        { label: 'Check evidence', detail: `${relevance.reason} · ${validation.checked} exact quote checks · ${validation.valid ? 'valid source matches' : 'source mismatch'}` },
         { label: 'Assemble report', detail: found ? `Returned ${evidence.length} verbatim source passages · no generative model` : 'Abstained rather than invent an answer' }
       ];
       return {
-        question: clean, status, route: routeResult, results,
+        question: clean, status, route: routeResult, results, relevance,
         evidence: found ? evidence : [], audit: validation, coverage,
         trace, isAbstention: !found,
         note: 'This demo returns exact excerpts from a limited sample corpus. It is not a live AI model and does not verify external facts.'
+      };
+    }
+
+    // An extractive research dossier: organizes source material, never invents
+    // claims, references or mathematical conclusions. No LLM runs here.
+    function dossier(question, hypotheses = []) {
+      const outcome = run(question);
+      if (!Array.isArray(hypotheses) || hypotheses.length > 6 ||
+          hypotheses.some(h => typeof h !== 'string' || h.length > 120))
+        throw new Error('Provide up to six short hypothesis labels.');
+      return {
+        title: `Evidence dossier: ${outcome.question}`,
+        question: outcome.question,
+        scope: 'Offline extractive report based exclusively on the three bundled example documents',
+        disposition: outcome.isAbstention ? 'INSUFFICIENT_EVIDENCE' : 'EXCERPTS_AVAILABLE',
+        relevance: outcome.relevance,
+        sources: outcome.evidence.map(item => ({citation: `[${item.index}]`, quotation: item.quote,
+          document: item.title, path: item.source, exactQuoteVerified: outcome.audit.checks.find(c=>c.index===item.index)?.supported === true})),
+        hypotheses: hypotheses.map(name => ({ name, assessment: 'NOT_ASSESSED',
+          explanation: 'No theory comparison without theory-specific evidence and independent reasoning.' })),
+        mathematicalAudit: { status: 'NOT_RUN', reason: 'Browser demo does not evaluate equations or symbolic derivations.' },
+        limitations: ['Exact quotation proves text provenance only, not factual correctness.',
+          'No independent source verification, source credibility evaluation, semantic entailment, or web research.',
+          'No autonomous AI or generated scientific conclusions.']
       };
     }
 
@@ -151,7 +199,7 @@
       };
     }
 
-    return { run, search, audit, route, evaluate, getDocuments: () => docs.map(d => ({ ...d, chunks: d.chunks.map(c => ({...c})) })) };
+    return { run, search, audit, route, evaluate, dossier, getDocuments: () => docs.map(d => ({ ...d, chunks: d.chunks.map(c => ({...c})) })) };
   }
 
   const exports = { tokenize, createEngine, BENCHMARK, MAX_QUERY };

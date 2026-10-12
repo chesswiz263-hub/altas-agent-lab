@@ -5,7 +5,7 @@
   const corpus = globalThis.AtlasCorpus;
   const factory = globalThis.AtlasDemoEngine;
   const engine = factory && corpus ? factory.createEngine(corpus) : null;
-  const repoBase = 'https://github.com/chesswiz263-hub/altas-agent-lab/blob/main/';
+  const repoBase = 'https://github.com/chesswiz263-hub/atlas-agent-lab/blob/main/';
   let lastReport = null;
   const titles = { workbench: 'Agent workbench', knowledge: 'Knowledge base', evaluation: 'Evaluation lab' };
 
@@ -60,7 +60,8 @@
         body.append(p);
       });
     }
-    $('#report-foot').textContent = `Query term coverage: ${percent(report.coverage)} · ${report.evidence.length} exact excerpts verified · No live AI model used`;
+    $('#report-foot').textContent = `Corpus term coverage: ${percent(report.relevance.corpusCoverage)} · Top passage coverage: ${percent(report.relevance.topPassageCoverage)} · ${report.evidence.length} exact excerpts · No live AI model`;
+    body.append(el('p','eval-disclaimer',`Retrieval decision: ${report.relevance.reason}. Missing terms: ${report.relevance.unmatchedTerms.join(', ') || 'none'}. Lexical scores cannot establish factual support.`));
     $('#copy-report').disabled = false;
   }
 
@@ -161,6 +162,15 @@
     runTask($('#question').value);
   });
   $('#run-eval').addEventListener('click', renderEvaluation);
+  const exportButton = $('#export-dossier');
+  exportButton.addEventListener('click', () => {
+    if (!lastReport) return;
+    const payload = engine.dossier(lastReport.question);
+    const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='atlas-evidence-dossier.json';
+    a.click(); URL.revokeObjectURL(url);
+  });
   $('#copy-report').addEventListener('click', async () => {
     if (!lastReport) return;
     const lines = [lastReport.question,'',lastReport.status,'',...lastReport.evidence.map(i => `[${i.index}] ${i.quote} — ${i.title} (${i.source})`),'',lastReport.note];

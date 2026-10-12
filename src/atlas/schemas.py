@@ -69,3 +69,9 @@ class JobRequest(RunRequest):
 class MemoryRequest(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     content: str = Field(min_length=1, max_length=4000)
+
+
+class ResearchDossierRequest(BaseModel):
+    question: str = Field(min_length=4, max_length=1200)
+    hypotheses: list[str] = Field(default_factory=list, max_length=6)
+    equations: list[str] = Field(default_factory=list, max_length=8)
