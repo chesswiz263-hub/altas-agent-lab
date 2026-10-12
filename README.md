@@ -1,33 +1,51 @@
 # ATLAS — Agent Intelligence Lab
 
-v0.4.0 · A local-first, model-agnostic agent engineering workbench  
+**v0.6.0 · Public interactive demo + v0.5 private browser workspace**  
 Python 3.11+ · FastAPI · SQLite/FTS5 · JavaScript dashboard · optional neural embeddings · MIT
 
-> Research, execute, inspect, and evaluate tool-using agents with observable decisions. ATLAS is deliberately an engineering prototype: its offline demo is deterministic, its citation checks are not truth oracles, and it is not a production multi-tenant SaaS.
+> Research, execute, inspect, and evaluate tool-using agents with observable decisions. ATLAS is deliberately an **engineering prototype**: its offline demo is deterministic, its citation checks are not truth oracles, and it is **not a production multi-tenant SaaS**.
 
 ## Capabilities
 
 | Layer | Implemented in this repository |
 |---|---|
 | Agent execution | Bounded ReAct-style agent with allowlisted tools, step budgets, persisted traces, single-agent and sequential four-role team modes |
-| Multi-model gateway | Native OpenAI / Anthropic / Gemini adapters and a deterministic offline provider; operator-defined model pricing |
+| Multi-model gateway | Native OpenAI / Anthropic / Gemini adapters and a deterministic **offline** provider; operator-defined model pricing |
 | Knowledge | SQLite BM25, lexical n-gram vectors, RRF hybrid fusion, optional SentenceTransformer-based local semantic vectors and semantic RRF |
 | v0.3 routing | Explainable *rule-based* auto-routing between one agent and the four-role team |
-| v0.4 durable queue | Persistent queued jobs, async single-worker execution, cursor-based event polling, cancellation, and restart recovery without repeating in-flight paid calls |
-| v0.4 operator access | Optional constant-time Bearer-token check for `/api/*` routes except health; token is not stored in browser storage |
-| v0.4 explicit memory | User-created local notes, FTS5 retrieval, delete controls, opt-in incorporation into queued runs only |
-| v0.4 calibration | Ten hand-labeled isolated citation-surface test cases with per-class precision/recall and confusion matrix |
+| **v0.4 durable queue** | Persistent queued jobs, async single-worker execution, cursor-based event polling, cancellation, and restart recovery without repeating in-flight paid calls |
+| **v0.4 operator access** | Optional constant-time Bearer-token check for `/api/*` routes except health; token is not stored in browser storage |
+| **v0.4 explicit memory** | User-created local notes, FTS5 retrieval, delete controls, **opt-in** incorporation into queued runs only |
+| **v0.4 calibration** | Ten hand-labeled isolated citation-surface test cases with per-class precision/recall and confusion matrix |
+| **v0.5 browser workspace** | GitHub Codespaces private-port launcher, authenticated hosted dashboard (signed session cookies, CSRF, login throttling), optional paid Render persistent deployment |
+| **v0.6 public demo** | Entirely static GitHub Pages interface, real local BM25 search against 3 published example documents, exact source-excerpt checks, 4-stage deterministic trace, 6-question retrieval smoke benchmark, no accounts or API tokens |
 | Observability | Evidence inspector with explicit citation validation and numeric mismatches, SSE for legacy runs, dashboard traces, local run history |
-| Packaging | Docker/Compose on loopback, non-root container, GitHub Actions test matrix, API schema, unit and integration tests |
+| Packaging | Docker/Compose, private GitHub Codespaces workspace, optional paid Render Blueprint with persistent disk, GitHub Actions test matrix and integration tests |
 
-### What v0.4 does not claim
+## Try the public demo in your browser (v0.6)
 
-- The queue runs one active job in one ASGI worker, using SQLite. It is not a distributed scheduler, and it does not implement hard pre-paid API billing limits or automatic retries. `--workers 1` is required. Queued jobs survive restarts; in-flight ones become `interrupted` and must be manually re-run, to avoid accidental charges.
+The **`docs/index.html`** public demo runs on **GitHub Pages** without a backend or login. The visitor can type a question, see ranked results from 12 passages (three public documents), inspect extractive quotations with source links, follow a four-step deterministic trace, and run a six-question retrieval smoke test. The site makes **zero API calls** and does **not** execute OpenAI, Anthropic, Gemini, or independent AI agents. It does not connect to the private SQLite database or stored documents. It is not a live model demo or a generic question-answering assistant.
+
+**Publish:** after committing this combined v0.5 + v0.6 repository, go to **GitHub repository → Settings → Pages → Source: Deploy from a branch → Branch: main → Folder: /docs → Save**. Wait for GitHub Pages deployment to complete. For the current GitHub repository spelling, the expected URL after deployment is `https://chesswiz263-hub.github.io/altas-agent-lab/` (it is **not live until Pages is enabled**). GitHub Pages configuration is separate from ordinary CI; a green Python CI check does not by itself mean the site is live. See **[docs/PUBLIC_DEMO_DEPLOYMENT.md](docs/PUBLIC_DEMO_DEPLOYMENT.md)**.
+
+The browser demo is static, whereas **v0.5 remains the private development workspace** with real Python agents, optional model providers, jobs and local state. Do not embed any server-side credentials in public demo files or enable the protected backend as a public Pages API.
+
+## Start ATLAS in your browser (v0.5)
+
+**Private developer option:** After uploading the combined v0.6 (which includes v0.5) to GitHub, open your repository → **Code → Codespaces → Create codespace on main**. The included `.devcontainer` installs dependencies, seeds sample data and starts the ATLAS dashboard. Open the private forwarded **port 8000** from the Codespaces **PORTS** tab. You can edit code and preview the app **entirely in your browser**, without configuring Python on your Windows PC.
+
+**Optional always-on URL:** The repository also includes `render.yaml` for a password-protected **paid Render web service with persistent disk**. Render provides HTTPS, while ATLAS requires an operator password, a separate signing secret, signed secure cookies, CSRF tokens and private access to saved documents, API routes and OpenAPI docs. Hosting is **not automatic** on GitHub and requires your action and billing agreement with Render. Start with the offline `demo` model; do not install billable API keys at first.
+
+**Full step-by-step guide: [docs/BROWSER_WORKSPACE.md](docs/BROWSER_WORKSPACE.md).**
+
+### Scope and limitations
+
+- The queue runs **one active job in one ASGI worker**, using SQLite. It is not a distributed scheduler, and it does not implement hard pre-paid API billing limits or automatic retries. `--workers 1` is required. Queued jobs survive restarts; in-flight ones become `interrupted` and **must be manually re-run**, to avoid accidental charges.
 - Cancellation is best effort: an HTTP call may already have reached a provider and may still incur charges. Worker shutdown can also interrupt an active run. Queue events preserve what was observed.
-- Optional token access is single-operator API protection, not RBAC, TLS, tenant isolation, abuse prevention, rate limiting, CSRF protection for future cookie auth, or complete security hardening. The UI and OpenAPI docs are publicly readable if the server itself is exposed. Keep the server bound to localhost.
-- Saved memory is plaintext in SQLite and is sent to the selected live model provider only when the operator checks *Include saved notes* on a background job. Notes are not automatically inferred, saved, or deleted by the agent. Do not store secrets in notes.
-- Citation heuristics and the hand-labeled calibration suite test surface alignment, not whether a claim is true. The 10 cases are deliberately simple and are not an external truthfulness dataset.
-- Neural search requires a separately installed model and opt-in indexing; it uses exact cosine scans in SQLite, not ANN / pgvector. The tested deterministic fake encoder is not a neural-model integration benchmark.
+- Optional legacy API token access remains suitable for local use, **not for deploying v0.4 publicly**. In v0.5, `ATLAS_HOSTED_MODE=1` guards UI, docs and API with a browser login, signed cookies, CSRF validation and in-process login throttling. This is still single-operator protection, not MFA, per-user authorization or production multi-tenant security.
+- Saved memory is **plaintext in SQLite** and is sent to the selected live model provider only when the operator checks *Include saved notes* on a background job. Notes are not automatically inferred, saved, or deleted by the agent. Do not store secrets in notes.
+- Citation heuristics and the hand-labeled calibration suite test **surface alignment**, not whether a claim is true. The 10 cases are deliberately simple and are not an external truthfulness dataset.
+- Neural search requires a separately installed model and opt-in indexing; it uses exact cosine scans in SQLite, **not ANN / pgvector**. The tested deterministic fake encoder is not a neural-model integration benchmark.
 
 ## Quick start
 
@@ -42,7 +60,7 @@ atlas seed
 uvicorn atlas.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000. Select Agent workbench, leave the offline `demo` provider selected, and run an example prompt. The background queue is enabled by default. Click Cancel active job while it runs, or review its events under the run history. The legacy streaming path remains available by unchecking background mode. No paid API credentials are needed for the offline demo.
+Open **http://127.0.0.1:8000**. Select **Agent workbench**, leave the offline `demo` provider selected, and run an example prompt. The **background queue** is enabled by default. Click **Cancel active job** while it runs, or review its events under the run history. The legacy streaming path remains available by unchecking background mode. No paid API credentials are needed for the offline demo.
 
 ### Optional operator API token
 
@@ -54,7 +72,7 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 uvicorn atlas.api:app --host 127.0.0.1 --port 8000
 ```
 
-Paste the token into the dashboard's API TOKEN password field. The token stays in memory for this page session (not persisted in localStorage). For API callers, set `Authorization: Bearer <TOKEN>` or `X-Atlas-Token: <TOKEN>`. Without a configured token, the local API is unauthenticated. The `/api/health` endpoint is intentionally unauthenticated for the Docker health probe. Use TLS and an authenticated gateway if you later deploy beyond a trusted local machine.
+Paste the token into the dashboard's **API TOKEN** password field. The token stays in memory for this page session (not persisted in localStorage). For API callers, set `Authorization: Bearer <TOKEN>` or `X-Atlas-Token: <TOKEN>`. Without a configured token, the local API is unauthenticated. The `/api/health` endpoint is intentionally unauthenticated for the Docker health probe. Use TLS and an authenticated gateway if you later deploy beyond a trusted local machine.
 
 ### Durable job example
 
@@ -75,16 +93,16 @@ Jobs have statuses `queued`, `running`, `completed`, `budget_exhausted`, `failed
 
 ### Opt-in remembered context
 
-Visit Knowledge base → Saved notes, explicitly save a small note, then in Agent workbench select *Include relevant saved notes*. Only for a queued job with `use_memory: true`, ATLAS looks up at most three matching notes and sends their content to the provider as untrusted data, not new tool permissions or trusted instructions. You can list and delete notes with `/api/memories`. Legacy SSE routes do not automatically retrieve saved notes.
+Visit **Knowledge base → Saved notes**, explicitly save a small note, then in **Agent workbench** select *Include relevant saved notes*. Only for a queued job with `use_memory: true`, ATLAS looks up at most three matching notes and sends their content to the provider as **untrusted data**, not new tool permissions or trusted instructions. You can list and delete notes with `/api/memories`. Legacy SSE routes do not automatically retrieve saved notes.
 
 ### Reproducible evidence calibration
 
-In Evaluation lab, click *Run calibration*, or call `GET /api/evaluations/calibration`. The endpoint uses a temporary, isolated database created from `examples/claim_gold.json` and leaves your documents untouched. Its confusion matrix and per-class precision/recall measure behavior on a tiny set of manually tagged examples, not cross-domain factuality. For real-world benchmarking, expand this set with independent human annotations and held-out datasets.
+In **Evaluation lab**, click *Run calibration*, or call `GET /api/evaluations/calibration`. The endpoint uses a **temporary, isolated database** created from `examples/claim_gold.json` and leaves your documents untouched. Its confusion matrix and per-class precision/recall measure behavior on a tiny set of manually tagged examples, **not cross-domain factuality**. For real-world benchmarking, expand this set with independent human annotations and held-out datasets.
 
 ### Optional live models and semantic search
 
 - Set the server-side `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or `GEMINI_API_KEY` for live model calls; verify provider protocol compatibility and budgets yourself.
-- Set `ATLAS_PRICING_JSON={"openai/your-model":[1.25,5.0]}` only with independently verified USD per million token prices for that exact model. Cost stops are after-observation estimates, never hard cost ceilings.
+- Set `ATLAS_PRICING_JSON={"openai/your-model":[1.25,5.0]}` only with independently verified USD per million token prices for that exact model. Cost stops are **after-observation estimates**, never hard cost ceilings.
 - Run `pip install -e '.[semantic]'` and `atlas index-semantic --batch-size 16 --max-chunks 256` for local neural retrieval, then select Neural semantic or Semantic hybrid search. First use may download model weights. You can repeat indexing until all chunks are covered. No model is downloaded during base installation.
 - Optional NLI requires `pip install -e '.[nli]'` and `ATLAS_NLI_MODEL` set to a compatible three-class checkpoint. Neither model inference nor NLI accuracy was end-to-end benchmarked in this environment.
 
@@ -111,7 +129,8 @@ Interactive API schema is at `/docs` for local development.
 
 ```mermaid
 flowchart TD
-    UI[No-build JavaScript dashboard] --> API[FastAPI / optional bearer-token guard]
+    UI[No-build JavaScript dashboard] --> AUTH[Local private port OR hosted signed session + CSRF]
+    AUTH --> API[FastAPI / optional bearer-token guard]
     API --> QUEUE[SQLite durable job table]
     QUEUE --> WORKER[One async local worker]
     WORKER --> ROUTER[Explainable policy router]
@@ -135,12 +154,13 @@ pytest -q
 # Install dev extras for Ruff lint locally:
 ruff check src tests --select E9,F821,F822,F823
 node --check static/app.js  # optional, if Node.js is available
+node --test tests/browser/*.test.cjs  # public-demo retrieval and safety checks
 
 docker compose up --build
 docker compose exec atlas atlas seed
 ```
 
-The Docker image deliberately installs only base dependencies; the port is mapped to `127.0.0.1:8000` and the container runs non-root. The durable worker starts with the single web process; do not configure multiple Uvicorn workers on the same SQLite database. Stopping the process marks an in-flight run interrupted instead of automatically resuming the same external LLM request.
+The Docker image deliberately installs only base dependencies; the port is mapped to `127.0.0.1:8000` and the container runs non-root. The durable worker starts with the single web process; **do not configure multiple Uvicorn workers on the same SQLite database**. Stopping the process marks an in-flight run interrupted instead of automatically resuming the same external LLM request.
 
 ## Repository map
 
@@ -155,3 +175,7 @@ The Docker image deliberately installs only base dependencies; the port is mappe
 - `tests/test_v04.py` — restart, cancellation, access, memory, and calibration integration checks
 
 See [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Deployment](docs/DEPLOYMENT.md), [Roadmap](docs/ROADMAP.md) and [Changelog](CHANGELOG.md).
+
+### Publish when you're ready
+
+The repository is prepared for your own GitHub account. See [GitHub publishing](docs/GITHUB_PUBLISHING.md) for local CLI commands and a pre-push secrets checklist. Connecting your account does **not** occur automatically, and this ZIP is not evidence that the code has been pushed to GitHub.

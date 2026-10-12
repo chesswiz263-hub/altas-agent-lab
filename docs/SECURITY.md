@@ -1,3 +1,11 @@
+# Security posture (v0.5)
+
+**v0.5 supports a private hosted single-operator browser login, not a public multi-user SaaS.** When `ATLAS_HOSTED_MODE=1`, the server fails startup unless two strong independent secrets are configured, protects dashboard, API docs and API endpoints except health checks, issues eight-hour signed `Secure`/`HttpOnly`/`SameSite=Strict` cookies, and requires same-origin requests plus explicit CSRF tokens for API mutations. Failed logins are throttled in memory. A logout clears the browser cookie; a stolen signed session can remain usable until expiration or signing-key rotation. The service also sets CSP, clickjacking and MIME-sniffing response protections.
+
+The original v0.4 notes below describe **legacy local API bearer-token mode** and should not be interpreted as a description of the v0.5 hosted login. For current deployment guidance see [Browser Workspace](BROWSER_WORKSPACE.md). Continue to use **one worker**, server-side environment secrets and a persistent disk if remote data should survive deploys. We have not undertaken a penetration test, a full privacy review, independent hosted deployment validation or enterprise authentication hardening.
+
+---
+
 # Security posture (v0.4)
 
 **ATLAS is local-first engineering software, not a hardened hosted SaaS.** The default Compose file binds to `127.0.0.1`. Do not expose port 8000 to untrusted networks. A **single-operator API token** can be enabled using `ATLAS_API_TOKEN`; it is checked against `Authorization: Bearer <value>` or `X-Atlas-Token` with a constant-time comparison. `/api/health` stays unauthenticated for health probes. Static HTML and `/docs` are public when the host is exposed. Authentication is **disabled** unless a token is configured.
@@ -22,3 +30,8 @@
 ## Public deployment prerequisites
 
 Add TLS, real operator authentication and authorization, per-user resource controls, rate limiting, provider budget and quotas, tenant scoping, data retention, encrypted secrets, egress policy, auditing, automated security testing, and a distributed queue/database design. Reassess the client CSP and threat model before embedding untrusted content or adding user-upload formats.
+
+
+## v0.6 public site trust boundary
+
+The static `docs/` GitHub Pages site is public and **does not** use `/api/*`, the private Python process, saved notes, LLM provider keys, or operator cookies. Never add credentials or private documents to `docs/` or its demo corpus. The demo uses fixed public example passages, deterministic BM25 and exact text quotation checks only. It must not be described as a production public API or actual autonomous multi-agent execution.

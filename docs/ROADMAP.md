@@ -30,3 +30,12 @@
 - ANN-backed vector search with measured recall/latency and embedding-cache reindex strategy.
 - Timeouts, structured redacted tracing, egress policies, secret rotation, abuse controls and documented backups.
 - TLS/secure proxy, environment hardening, request admission budgets, audit retention and privacy controls.
+
+
+## Public demo (v0.6 shipped)
+- [x] Browser-only sample-retrieval and deterministic audit UI
+- [x] GitHub Pages deploy-from-branch `/docs` layout
+- [x] Sample-only corpus; no API credentials, user uploads, or private data
+- [x] Documented distinction between illustrative flow and real model-based reasoning
+- [ ] Independent visitor testing after the user enables Pages
+- [ ] Hosted general-purpose AI mode with isolated per-user backend (future milestone, not part of v0.6)

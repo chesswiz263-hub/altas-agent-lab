@@ -104,7 +104,7 @@ def test_injected_nli_does_not_pretend_to_be_truth(store):
 def test_api_semantic_and_verification(tmp_path):
     db = Store(tmp_path / 'api.db', encoder=TinyEncoder(), embedding_model='fake')
     with TestClient(create_app(db)) as client:
-        assert client.get('/api/health').json()['version'] == '0.4.0'
+        assert client.get('/api/health').json()['version'] == '0.6.0'
         assert client.get('/api/search', params={'q': 'feline', 'mode': 'semantic'}).status_code == 409
         assert client.post('/api/embeddings/index', json={}).json()['complete']
         doc = client.post('/api/documents', json={'title': 'Pets', 'content': 'Cats are wonderful pets and kittens like to explore.'}).json()

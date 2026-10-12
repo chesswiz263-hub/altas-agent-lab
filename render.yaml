@@ -1,0 +1,29 @@
+# Optional paid hosted deployment: protected single-operator web service.
+# Requires a paid Render plan with persistent disk; check current pricing before creation.
+services:
+  - type: web
+    name: atlas-agent-lab
+    runtime: docker
+    plan: 0.5c-512mb
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    initialDeployHook: atlas seed
+    envVars:
+      - key: ATLAS_HOSTED_MODE
+        value: "1"
+      - key: ATLAS_ADMIN_PASSWORD
+        sync: false
+      - key: ATLAS_SESSION_SECRET
+        generateValue: true
+      - key: ATLAS_DB_PATH
+        value: /app/data/atlas.db
+      - key: ATLAS_PROJECT_ROOT
+        value: /app
+      - key: PORT
+        value: "10000"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    disk:
+      name: atlas-data
+      mountPath: /app/data
+      sizeGB: 5

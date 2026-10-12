@@ -1,3 +1,7 @@
+# Deployment options (v0.5)
+
+**Browser access is available in two ways:** private GitHub Codespaces development or a paid, password-protected Render deployment. Follow [Browser Workspace](BROWSER_WORKSPACE.md) for detailed instructions, costs and security boundaries.
+
 # Local deployment and reproducibility
 
 ```sh
@@ -26,3 +30,8 @@ CI uses Python 3.11/3.12/3.13 with offline fixtures. Live provider integration a
 ## Before public deployment
 
 The bearer token is only minimal single-operator access control. You still need TLS, a secure gateway, authorization, rate limiting, safe data retention, encrypted secrets, abuse controls, separated workers, tenancy, backups, idempotent job recovery, resource budgeting and egress restrictions. **Do not publish this reference instance as a public SaaS.**
+
+
+## v0.6 public browser demo (GitHub Pages)
+
+A static no-login demo is included under `/docs`. Its independent publication procedure is in [PUBLIC_DEMO_DEPLOYMENT.md](PUBLIC_DEMO_DEPLOYMENT.md). Configure `Settings → Pages → Deploy from a branch → main /docs`. This is distinct from the private backend deployment and requires no Python hosting, database, provider keys or paid model calls.

@@ -1,4 +1,23 @@
+## [0.6.0] - 2026-10-11
+
+- Added free, fully static GitHub Pages demo at `docs/index.html`: public research console, local BM25 retrieval, 4-step trace, exact quotation auditing, sample corpus inspector, six-case evaluation.
+- Reuses verbatim passages from the three existing example knowledge documents; no paid provider, server calls, login, memory, or private backend exposed by the demo.
+- Preserved all v0.5 Codespaces and authenticated workspace support in the same repository.
+- Added Node browser-engine tests and integrated them into the Python-version CI matrix.
+- Added public demo deployment and security documentation; bumped package/API version to 0.6.0.
+
 # Changelog
+
+## v0.5.0 — Browser workspace and hosted operator access
+
+- **GitHub Codespaces:** Devcontainer auto-installs ATLAS, seeds example knowledge, launches a cloud development server and forwards port 8000 privately.
+- **Hosted browser auth:** Optional fail-closed single-operator password login, signed eight-hour Secure/HttpOnly/SameSite cookies, CSRF header validation, same-origin checks, logout and rate-limited login attempts.
+- **Protected surfaces:** Hosted auth gates dashboard assets, API documentation and all non-health API routes. API keys remain server-side.
+- **Render Blueprint:** Paid Docker web service with persistent disk, TLS via Render, 1-worker queue and generated session signing secret.
+- **Security:** CSP and browser security headers, non-default secret requirements and hosted-mode security tests.
+- **Testing:** Expanded offline test suite (63 checks at the first integration pass); live hosted-provider integration and operational security audit remain outstanding.
+- **Scope:** Codespaces is a private development environment; Render is a single-operator prototype deployment, not a public multi-user SaaS.
+
 
 ## v0.4.0 — Durable jobs, operator controls & calibration
 

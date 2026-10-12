@@ -8,7 +8,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, StreamingResponse, JSONResponse
+from fastapi.responses import FileResponse, StreamingResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from atlas.agent import Agent
@@ -34,12 +34,14 @@ from atlas.schemas import (
 from atlas.store import Store
 from atlas.team import Team
 from atlas.verification import review
+from atlas.web_auth import WebAuth, SESSION_COOKIE
 
 ROOT = Path(os.getenv("ATLAS_PROJECT_ROOT", str(Path(__file__).resolve().parents[2])))
 
 
 def create_app(store: Store | None = None) -> FastAPI:
     db = store or Store()
+    auth = WebAuth.from_environment()
     jobs = Jobs(db)
     worker = LocalWorker(jobs)
 
@@ -51,10 +53,11 @@ def create_app(store: Store | None = None) -> FastAPI:
         finally:
             await worker.stop()
 
-    app = FastAPI(title="ATLAS Agent Lab", version="0.4.0",
+    app = FastAPI(title="ATLAS Agent Lab", version="0.6.0",
                   description="Auditable agents, local durable job queue, opt-in memory, and calibrated evals",
                   lifespan=lifespan)
     app.state.store = db
+    app.state.auth = auth
     app.state.jobs = jobs
     app.state.worker = worker
 
@@ -72,6 +75,43 @@ def create_app(store: Store | None = None) -> FastAPI:
         if request.url.path.startswith('/api/'):
             response.headers['Cache-Control'] = 'no-store'
         return response
+    @app.middleware("http")
+    async def hosted_browser_guard(request: Request, call_next):
+        path = request.url.path
+        if auth.enabled:
+            public = {"/login", "/auth/login", "/auth/login.js", "/auth/login.css", "/api/health"}
+            cookie = request.cookies.get(SESSION_COOKIE, "")
+            signed_in = auth.valid_session(cookie)
+            if path not in public and not signed_in:
+                response = auth.reject(request)
+            elif path == "/login" and signed_in:
+                response = RedirectResponse("/", status_code=303)
+            elif path.startswith("/api/") and request.method not in {"GET", "HEAD", "OPTIONS"} and (
+                not auth.same_origin(request) or not auth.verify_csrf(request, cookie)
+            ):
+                response = JSONResponse({"detail": "Invalid CSRF or request origin"}, status_code=403)
+            elif path == "/auth/logout" and (not auth.same_origin(request) or not auth.verify_csrf(request, cookie)):
+                response = JSONResponse({"detail": "Invalid CSRF or request origin"}, status_code=403)
+            elif path == "/auth/login" and not auth.same_origin(request):
+                response = JSONResponse({"detail": "Invalid request origin"}, status_code=403)
+            else:
+                response = await call_next(request)
+        else:
+            response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; font-src 'self'; connect-src 'self'; "
+            "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+        )
+        if auth.enabled:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     static_dir = ROOT / "static"
     if static_dir.is_dir():
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
@@ -80,9 +120,56 @@ def create_app(store: Store | None = None) -> FastAPI:
     def index():
         return FileResponse(static_dir / "index.html")
 
+    @app.get("/login", include_in_schema=False)
+    def login_page():
+        return FileResponse(static_dir / "login.html")
+
+    @app.get("/auth/login.js", include_in_schema=False)
+    def login_script():
+        return FileResponse(static_dir / "login.js", media_type="text/javascript")
+
+    @app.get("/auth/login.css", include_in_schema=False)
+    def login_style():
+        return FileResponse(static_dir / "login.css", media_type="text/css")
+
+    @app.post("/auth/login", include_in_schema=False)
+    async def web_login(request: Request):
+        if not auth.enabled:
+            raise HTTPException(404, "Not configured")
+        # Limit request size before JSON decoding and rate limit unsuccessful attempts.
+        if int(request.headers.get("content-length", "0") or "0") > 4096:
+            raise HTTPException(413, "Request too large")
+        if not auth.login_allowed(request.client.host if request.client else "unknown"):
+            return JSONResponse({"detail": "Too many attempts. Try again later."}, status_code=429)
+        try:
+            data = await request.json()
+            password = data.get("password", "")
+        except (ValueError, AttributeError, TypeError):
+            password = ""
+        if not isinstance(password, str) or not auth.verify_password(password):
+            return JSONResponse({"detail": "Incorrect password"}, status_code=401)
+        auth.login_success(request.client.host if request.client else "unknown")
+        session = auth.session()
+        result = JSONResponse({"ok": True, "csrf": auth.csrf(session)})
+        auth.set_cookie(result, session)
+        return result
+
+    @app.get("/auth/session", include_in_schema=False)
+    def web_session(request: Request):
+        if not auth.enabled:
+            return {"authenticated": True, "hosted": False, "csrf": None}
+        return {"authenticated": True, "hosted": True,
+                "csrf": auth.csrf(request.cookies.get(SESSION_COOKIE, ""))}
+
+    @app.post("/auth/logout", include_in_schema=False)
+    def web_logout():
+        response = JSONResponse({"ok": True})
+        response.delete_cookie(SESSION_COOKIE, path="/", secure=auth.secure, httponly=True, samesite="strict")
+        return response
+
     @app.get("/api/health")
     def health():
-        return {"ok": True, "service": "atlas", "version": "0.4.0"}
+        return {"ok": True, "service": "atlas", "version": "0.6.0"}
 
     @app.get("/api/status")
     def status():
@@ -95,7 +182,9 @@ def create_app(store: Store | None = None) -> FastAPI:
                 "known_estimated_cost_usd": round(sum(r["estimated_cost_usd"] or 0 for r in runs), 6),
                 "semantic_index": app.state.store.semantic_status(),
                 "jobs": jobs.stats(),
-                "auth_enabled": bool(os.getenv("ATLAS_API_TOKEN"))}
+                "auth_enabled": bool(os.getenv("ATLAS_API_TOKEN")) or auth.enabled,
+                "hosted_mode": auth.enabled,
+                "legacy_api_token_enabled": bool(os.getenv("ATLAS_API_TOKEN"))}
 
     @app.get("/api/documents")
     def documents():

@@ -27,3 +27,10 @@ BM25 full-text search and lexical hashed n-gram vectors are offline-capable. Neu
 ## Trust boundaries
 
 Browser and API requests are untrusted. Optional single-token authentication verifies API requests through a constant-time comparison. Model outputs, memory notes, indexed documents, source passages and intermediary agents are not trusted instructions. Tool execution is restricted to a known allowlist, and API keys remain server-side. All data is single-workspace plaintext SQLite: do not use for sensitive multi-user production systems.
+
+
+## v0.6: public demo is not the private server
+
+The public `docs/index.html` site is independent of the FastAPI application. It uses only its bundled, read-only `docs/demo/{corpus,engine,app}.js` scripts and CSS. BM25 ranking, excerpt selection and quotation checks execute locally in each visitor's browser. No private API endpoints are accessed.
+
+The original v0.5 `static/` UI and FastAPI routes remain intended for a private Codespace or an authenticated hosted operator. **Do not** assume a GitHub Pages site exposes the private FastAPI app. The public demo deliberately does not provide paid-model execution, document upload, persistent memory, or arbitrary tools.

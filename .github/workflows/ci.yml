@@ -21,3 +21,9 @@ jobs:
           ruff check src tests --select E9,F821,F822,F823
       - name: Run tests
         run: pytest -q
+      - name: Browser demo tests (Node.js)
+        run: |
+          node --version
+          node --check docs/demo/engine.js
+          node --check docs/demo/app.js
+          node --test tests/browser/*.test.cjs
