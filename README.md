@@ -14,7 +14,7 @@ This release combines the **v0.7–v1.0 development track** as a single reposito
 - **v0.9 — Research framework:** exportable offline evidence dossier, hypothesis labels with explicit NOT_EVALUATED states, and scoped numerical arithmetic checks. No simulated scientific conclusions.
 - **v1.0 — Integrated API and tests:** `POST /api/research/dossier`, bounded request validation, CI regression suite for reliable abstention and checked arithmetic, and browser JSON dossier export.
 
-**Public demo:** https://chesswiz263-hub.github.io/atlas-agent-lab/ (after you publish this update to GitHub Pages). The demonstration remains offline and restricted to three AI engineering documents. The full backend research endpoint runs only in the private Python application.
+**Public demo:** https://chesswiz263-hub.github.io/atlas-agent-lab/ (served through GitHub Pages). The demonstration remains offline and restricted to three AI engineering documents. The full backend research endpoint runs only in the private Python application.
 
 **Not implemented:** scientific paper discovery, independent literature verification, live online citation checks, theory comparison, dimensional analysis, symbolic mathematics, or autonomous physics synthesis. Claims must not be described as scientifically verified based on source hashes alone. See [Research integrity and roadmap](docs/RESEARCH_INTEGRITY.md).
 
@@ -40,7 +40,7 @@ This release combines the **v0.7–v1.0 development track** as a single reposito
 
 The **`docs/index.html`** public demo runs on **GitHub Pages** without a backend or login. The visitor can type a question, see ranked results from 12 passages (three public documents), inspect extractive quotations with source links, follow a four-step deterministic trace, and run a six-question retrieval smoke test. The site makes **zero API calls** and does **not** execute OpenAI, Anthropic, Gemini, or independent AI agents. It does not connect to the private SQLite database or stored documents. It is not a live model demo or a generic question-answering assistant. A v1.0 lexical relevance gate now reduces spurious off-topic retrieval, and a JSON research dossier can be exported after running a question.
 
-**Publish:** after committing this v1.0 repository, go to **GitHub repository → Settings → Pages → Source: Deploy from a branch → Branch: main → Folder: /docs → Save**. Wait for GitHub Pages deployment to complete. For the current GitHub repository spelling, the expected URL after deployment is `https://chesswiz263-hub.github.io/atlas-agent-lab/` (it is **not live until Pages is enabled**). GitHub Pages configuration is separate from ordinary CI; a green Python CI check does not by itself mean the site is live. See **[docs/PUBLIC_DEMO_DEPLOYMENT.md](docs/PUBLIC_DEMO_DEPLOYMENT.md)**.
+**GitHub Pages:** The public demo is configured to deploy from the `main` branch and `/docs` folder. Its URL is https://chesswiz263-hub.github.io/atlas-agent-lab/. Pages deployment is separate from Python CI. See [Public demo deployment](docs/PUBLIC_DEMO_DEPLOYMENT.md).
 
 The browser demo is static, whereas **v0.5 remains the private development workspace** with real Python agents, optional model providers, jobs and local state. Do not embed any server-side credentials in public demo files or enable the protected backend as a public Pages API.
 
@@ -190,6 +190,6 @@ The Docker image deliberately installs only base dependencies; the port is mappe
 
 See [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Deployment](docs/DEPLOYMENT.md), [Roadmap](docs/ROADMAP.md) and [Changelog](CHANGELOG.md).
 
-### Publish when you're ready
+### Repository updates
 
-The repository is prepared for your own GitHub account. See [GitHub publishing](docs/GITHUB_PUBLISHING.md) for local CLI commands and a pre-push secrets checklist. Connecting your account does **not** occur automatically, and this ZIP is not evidence that the code has been pushed to GitHub.
+See [GitHub publishing](docs/GITHUB_PUBLISHING.md) for local CLI commands and a pre-push secrets checklist. After updating the repository, verify CI and the GitHub Pages deployment before publishing a new release tag.
