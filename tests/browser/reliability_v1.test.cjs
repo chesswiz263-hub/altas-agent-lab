@@ -31,3 +31,38 @@ test('dossier retains exact provenance for supported queries',()=>{
 test('dossier has bounded hypothesis input',()=>{
  assert.throws(()=>engine.dossier('foo',Array(7).fill('a')),/six/);
 });
+
+// Regression for real public beta feedback: v1.0 rejected natural paraphrases
+// because it required incidental verbs ("make", "work") as source terms.
+test('public v1.0 safety question succeeds without tool-using qualifier', () => {
+ const result = engine.run('What safeguards make AI agents reliable?');
+ assert.equal(result.isAbstention, false);
+ assert.ok(result.evidence.some(e => e.quote.includes('tool allowlists')));
+ assert.equal(result.audit.valid, true);
+});
+test('common reliability paraphrases retain citeable evidence', () => {
+ for (const question of [
+  'How can I make AI agents reliable?',
+  'How do you build reliable AI agents?',
+  'What safeguards help AI agents run safely?',
+  'How does BM25 work?',
+  'What safeguards protect untrusted retrieved material?'
+ ]) {
+  const result = engine.run(question);
+  assert.equal(result.isAbstention, false, question);
+  assert.ok(result.evidence.length > 0, question);
+  assert.equal(result.audit.valid, true, question);
+ }
+});
+test('unrelated subjects cannot piggyback on ordinary shared words', () => {
+ for (const question of [
+  'What is the effect of gravity on the tool budget?',
+  'How do agents use safeguards on Mars?',
+  'How does the Aharonov-Bohm effect demonstrate the importance of electromagnetic potentials in quantum mechanics?',
+  'Explain the relationship between quantum wavefunctions, magnetic flux, and electromagnetic vector potentials.'
+ ]) {
+  const result = engine.run(question);
+  assert.equal(result.isAbstention, true, question);
+  assert.equal(result.evidence.length, 0, question);
+ }
+});

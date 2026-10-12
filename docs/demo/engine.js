@@ -5,7 +5,14 @@
 (function (root) {
   'use strict';
 
-  const STOP = new Set('a an and are as at be by can could do does for from had has have how i in into is it its of on or our should the their them these this to using was were what when where which who why with would you your we about that all'.split(' '));
+  const STOP = new Set('a an and are as at be by can could do does for from had has have how i in into is it its of on or our should the their them these this to using was were what when where which who why with would you your we about that all make makes making build building work works working explain explaining describe describing outline outlining demonstrate demonstrating importance between handle handles handled handling help helps helped helping run runs running avoid avoids avoided avoiding improve improves improving protect protects protecting protected'.split(' '));
+  // A tiny documented set of vocabulary equivalences for this *fixed* demo corpus.
+  // This is not a semantic model: unknown domain terminology must still abstain.
+  const EQUIVALENTS = Object.freeze({
+    reliable: 'reliability', robust: 'reliability', robustness: 'reliability',
+    safety: 'safeguard', safe: 'safeguard', safely: 'safeguard',
+    proof: 'prove'
+  });
   const MAX_QUERY = 320;
   const BENCHMARK = Object.freeze([
     { question: 'What safeguards make tool-using agents reliable?', doc: 'agent_reliability_playbook' },
@@ -25,7 +32,8 @@
 
   function tokenize(input) {
     return (String(input).toLowerCase().match(/[a-z0-9]+/g) || [])
-      .filter(w => w.length > 1 && !STOP.has(w)).map(stem);
+      .filter(w => w.length > 1 && !STOP.has(w))
+      .map(stem).map(w => EQUIVALENTS[w] || w);
   }
 
   function splitSentences(text) {
@@ -38,7 +46,8 @@
     const docs = corpus.map(doc => ({ ...doc, chunks: doc.chunks.map(chunk => ({ ...chunk })) }));
     const chunks = docs.flatMap(doc => doc.chunks.map(chunk => ({
       ...chunk, docId: doc.id, title: doc.title, source: doc.source,
-      words: tokenize(chunk.text)
+      words: tokenize(chunk.text).concat(tokenize(doc.title)),
+      bodyWords: tokenize(chunk.text), titleWords: tokenize(doc.title)
     })));
     if (!chunks.length) throw new Error('The public corpus is empty');
     const avgLength = chunks.reduce((acc, c) => acc + c.words.length, 0) / chunks.length;
@@ -64,7 +73,7 @@
         });
         return { id: chunk.id, docId: chunk.docId, title: chunk.title, source: chunk.source,
           text: chunk.text, score, hits, coverage: hits / query.length };
-      }).filter(c => c.score > 0).sort((a,b) => b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
+      }).filter(c => c.score > 0).sort((a,b) => b.hits - a.hits || b.score - a.score || a.id.localeCompare(b.id)).slice(0, limit);
     }
 
     function relevanceGate(question, results) {
@@ -74,6 +83,12 @@
       const candidate = results[0] || null;
       const coverage = terms.length ? available.length / terms.length : 0;
       const passageCoverage = candidate ? candidate.coverage : 0;
+      // Out-of-corpus concepts (gravity, quantum, etc.) cannot be validated
+      // merely because unrelated parts of the question match a document.
+      // Query verbs and function words are excluded by STOP; the remaining
+      // unmatched terms are treated conservatively as unsupported concepts.
+      const unknownConcepts = missing.filter(t => t.length >= 4);
+
       // Require multiple independent lexical anchors for multi-term queries.
       // A lone shared word (such as "vector" or "effect") is never enough.
       const minimumHits = terms.length <= 1 ? 1 : 2;
@@ -82,6 +97,8 @@
       if (!candidate) reason = 'No matching source passages';
       else if (available.length < minimumHits || candidate.hits < minimumHits)
         reason = 'Insufficient distinct query terms supported by a single source passage';
+      else if (unknownConcepts.length)
+        reason = 'Unrecognized topic-specific terminology: ' + unknownConcepts.join(', ');
       else if (coverage < minCoverage || passageCoverage < Math.min(minCoverage, 0.5))
         reason = 'Insufficient important-term coverage for reliable retrieval';
       return { accepted: reason === null, reason: reason || 'Minimum lexical relevance checks passed',
@@ -100,7 +117,14 @@
           const words = new Set(tokenize(sentence));
           const overlap = [...q].filter(t => words.has(t)).length;
           // A sentence must share substantive terms with the question.
-          if (overlap >= Math.min(2, q.size)) sentences.push({ sentence, overlap, source: hit });
+          // A title may establish a second anchor (e.g. Reliability Playbook
+          // for a question about reliable agents). Still require actual body
+          // overlap so a title alone never supplies an unsupported quotation.
+          const titleOverlap = [...q].filter(t => tokenize(hit.title).includes(t)).length;
+          if (overlap >= Math.min(2, q.size) ||
+              (overlap === 1 && titleOverlap >= 1 && hit.hits >= 2 &&
+               [...q].filter(t => words.has(t) || tokenize(hit.title).includes(t)).length >= 2))
+            sentences.push({ sentence, overlap, source: hit });
         });
       });
       sentences.sort((a,b) => b.overlap - a.overlap || b.source.score - a.source.score || a.sentence.localeCompare(b.sentence));
