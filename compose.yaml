@@ -1,0 +1,18 @@
+services:
+  atlas:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      ATLAS_DB_PATH: /app/data/atlas.db
+      ATLAS_PROJECT_ROOT: /app
+      ATLAS_API_TOKEN: ${ATLAS_API_TOKEN:-}
+      ATLAS_PRICING_JSON: ${ATLAS_PRICING_JSON:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    volumes:
+      - atlas_data:/app/data
+    restart: unless-stopped
+volumes:
+  atlas_data:

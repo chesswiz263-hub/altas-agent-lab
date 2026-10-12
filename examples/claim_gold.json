@@ -1,0 +1,12 @@
+[
+  {"id":"aligned-1","title":"Guideline A","source":"Safety reviews use allowlisted execution tools to reduce agent risks.","keyword":"allowlisted","claim":"Safety reviews use allowlisted execution tools to reduce agent risks [CITE].","expected":"surface_aligned"},
+  {"id":"aligned-2","title":"Guideline B","source":"Researchers recorded 202 observations on lunar craters.","keyword":"researchers","claim":"Researchers recorded 202 observations on lunar craters [CITE].","expected":"surface_aligned"},
+  {"id":"numeric-1","title":"Metrics A","source":"The system evaluated 17 documents with human reviewers.","keyword":"reviewers","claim":"The system evaluated 46 documents with human reviewers [CITE].","expected":"numeric_mismatch"},
+  {"id":"numeric-2","title":"Metrics B","source":"A rover crossed 3 valleys during a navigation test.","keyword":"rover","claim":"A rover crossed 9 valleys during a navigation test [CITE].","expected":"numeric_mismatch"},
+  {"id":"missing-1","title":"Evidence A","source":"The moon reflects sunlight throughout its visible phases.","keyword":"moon","claim":"The moon reflects sunlight [doc:999999#chunk:999999].","expected":"invalid_citation"},
+  {"id":"missing-2","title":"Evidence B","source":"A server can record validated request metadata for audit.","keyword":"validated","claim":"A server records validated request metadata [doc:123456#chunk:654321].","expected":"invalid_citation"},
+  {"id":"unattributed-1","title":"Research A","source":"Saturn is a planet with a system of rings.","keyword":"Saturn","claim":"Saturn has an extensive system of rings.","expected":"unattributed"},
+  {"id":"unattributed-2","title":"Research B","source":"Tests verify the shape of an API response.","keyword":"Tests","claim":"Tests verify response shapes and contracts.","expected":"unattributed"},
+  {"id":"weak-1","title":"Logistics A","source":"The software has an offline model integration for demonstrations.","keyword":"offline","claim":"Ancient volcanoes emitted massive columns of ash during eruptions [CITE].","expected":"weak_alignment"},
+  {"id":"weak-2","title":"Logistics B","source":"Astronomers captured images of distant galaxies.","keyword":"galaxies","claim":"Botanists identify native orchids in humid forests [CITE].","expected":"weak_alignment"}
+]

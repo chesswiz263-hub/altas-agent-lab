@@ -1,0 +1,5 @@
+[
+  {"id":"agent-safeguards", "question":"What are three baseline safeguards for production-grade tool-using agents?", "expected_title":"Agent Reliability Playbook"},
+  {"id":"mcp-tools", "question":"Which three tools are exposed by the ATLAS MCP integration?", "expected_title":"Mcp Integration Guide"},
+  {"id":"retrieval", "question":"How does SQLite FTS5 rank indexed retrieval chunks with BM25?", "expected_title":"Retrieval Guide"}
+]
